@@ -1,10 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# ── STDIN ফিক্স (curl | bash এর জন্য) ──
-if [ ! -t 0 ]; then
-    exec < /dev/tty 2>/dev/null || true
-fi
-
 # ══════════════════════════════════════════
 #   TERMUX SETUP v7.5 - MULTICOLOR HACKER EDITION
 # ══════════════════════════════════════════
@@ -54,6 +49,7 @@ section "[1] Packages"
 (pkg update -y -q 2>/dev/null) & spin "Updating"
 (pkg upgrade -y -q 2>/dev/null) & spin "Upgrading"
 
+# কালারফুল টেক্সট ও কোড বৃষ্টির জন্য ruby, lolcat এবং cmatrix যুক্ত করা হয়েছে
 for p in zsh git ncurses-utils curl ruby cmatrix; do
     (pkg install -y -q "$p" 2>/dev/null) & spin "Installing $p"
 done
@@ -375,11 +371,11 @@ show_all_prompts() {
     echo -e "  ${C}${BOLD}║${NC}  ${Y}${BOLD}✦  40 PROMPT DESIGNS - SELECT YOUR STYLE  ✦${NC}     ${C}${BOLD}║${NC}"
     echo -e "  ${C}${BOLD}╚══════════════════════════════════════════════════════╝${NC}"
     echo ""
-
+    
     while IFS='|' read -r num line1 line2; do
         display_line1=$(echo "$line1" | sed "s/_USER_/$USER_NAME/g" | sed "s/_TIME_/16:01/g")
         display_line2=$(echo "$line2" | sed "s/_USER_/$USER_NAME/g" | sed "s/_TIME_/16:01/g")
-
+        
         if [ $num -le 9 ]; then
             echo -e "  ${M}${BOLD} 0${num})${NC}  ${W}${display_line1}${NC}"
             echo -e "       ${W}${display_line2}${NC}"
@@ -389,7 +385,7 @@ show_all_prompts() {
         fi
         echo ""
     done < "$HOME/.prompt_designs.txt"
-
+    
     echo ""
     echo -e "  ${C}${BOLD}════════════════════════════════════════════════════════${NC}"
 }
@@ -420,7 +416,7 @@ echo -e "  ${W}$(echo "$PROMPT_LINE1_TEMPLATE" | sed "s/_USER_/$USER_NAME/g" | s
 echo -e "  ${W}$(echo "$PROMPT_LINE2_TEMPLATE" | sed "s/_USER_/$USER_NAME/g" | sed "s/_TIME_/16:01/g")${NC}"
 echo ""
 
-# ── [8] Banner Script ─────────────────────
+# ── [8] Banner Script (Matrix Rain + Green Hacker FX) ─────
 section "[8] Building Banner"
 
 cat > "$HOME/.terminal_banner.sh" << 'BEOF'
@@ -457,9 +453,11 @@ _thin() {
     echo -e "${NC}"
 }
 
+# ── Matrix Rain ইন্ট্রো (হ্যালো এনিমেশন) ──
 _matrix_rain() {
     local duration="${1:-1.2}"
     local chars="01░▒▓ｱｲｳｴｵｶｷｹｺｻｼｽｾｺﾞｲﾙｱﾆ#$%&"
+    local end=$((SECONDS + 0))
     local frames=$(( $(echo "$duration / 0.05" | awk '{print int($1)}') ))
     [ "$frames" -lt 8 ] && frames=8
     for ((f=0; f<frames; f++)); do
@@ -482,12 +480,12 @@ _matrix_rain() {
 _ascii_art() {
     local text="$1"
     local font_file="$2"
-
+    
     declare -A CHAR_MAP
     local current_char=""
     local lines=()
     local reading=false
-
+    
     while IFS= read -r line; do
         if [[ "$line" =~ ^[A-Z]$ ]] && [ ${#line} -eq 1 ]; then
             if [ -n "$current_char" ] && [ ${#lines[@]} -gt 0 ]; then
@@ -514,14 +512,14 @@ _ascii_art() {
             lines+=("$line")
         fi
     done < "$font_file"
-
+    
     if [ -n "$current_char" ] && [ ${#lines[@]} -gt 0 ]; then
         CHAR_MAP["$current_char"]=$(printf '%s\n' "${lines[@]}")
     fi
-
+    
     local result_lines=()
     local name_length=${#text}
-
+    
     for ((i=0; i<6; i++)); do
         local combined_line=""
         for ((j=0; j<name_length; j++)); do
@@ -538,7 +536,7 @@ _ascii_art() {
         done
         result_lines+=("$combined_line")
     done
-
+    
     for line in "${result_lines[@]}"; do
         echo "$line"
     done
@@ -555,17 +553,17 @@ echo ""
 
 if [ -f "$FONT_FILE" ]; then
     COLORS=("${A}" "${B}" "${C}" "${D}" "${E}" "${A}")
-
+    
     ascii_output=$(_ascii_art "$UNAME" "$FONT_FILE")
     line_index=0
-
+    
     while IFS= read -r line; do
         if [ -n "$line" ]; then
             COLOR="${COLORS[$((line_index % ${#COLORS[@]}))]}"
             line_len=${#line}
             pad=$(( (TW - line_len) / 2 ))
             [ $pad -lt 0 ] && pad=0
-
+            
             printf "%${pad}s"
             echo -e "${COLOR}${BOLD}${line}${NC}"
             sleep 0.06
@@ -660,7 +658,7 @@ BEOF
 chmod +x "$HOME/.terminal_banner.sh"
 ok "Banner ready"
 
-# ── [9] .zshrc ────────────────────────────
+# ── [9] .zshrc with Selected Prompt ───────
 section "[9] ZSH Config"
 [ -f "$HOME/.zshrc" ] && cp "$HOME/.zshrc" "$HOME/.zshrc.bak" && ok "Backed up old .zshrc"
 
@@ -678,6 +676,7 @@ export COLORTERM="truecolor"
 export LANG="en_US.UTF-8"
 ZSH_THEME=""
 
+# ── Plugins ───────────────────────────────
 plugins=(
     git
     zsh-autosuggestions
@@ -689,23 +688,26 @@ plugins=(
 
 [ -f "\$ZSH/oh-my-zsh.sh" ] && source "\$ZSH/oh-my-zsh.sh"
 
+# ── Autosuggestions (Cyan) ────────────────
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=45,bold'
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=50
 ZSH_AUTOSUGGEST_USE_ASYNC=true
 
+# ── মাল্টিকালার সিনট্যাক্স হাইলাইটিং (মাঝে মাঝে কালার কালার দেখাবে) ──
 typeset -A ZSH_HIGHLIGHT_STYLES
-ZSH_HIGHLIGHT_STYLES[command]='fg=46,bold'
-ZSH_HIGHLIGHT_STYLES[builtin]='fg=201,bold'
-ZSH_HIGHLIGHT_STYLES[alias]='fg=45,bold'
-ZSH_HIGHLIGHT_STYLES[function]='fg=226,bold'
-ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=196,bold'
-ZSH_HIGHLIGHT_STYLES[reserved-word]='fg=208,bold'
-ZSH_HIGHLIGHT_STYLES[path]='fg=51,underline'
+ZSH_HIGHLIGHT_STYLES[command]='fg=46,bold'          # উজ্জ্বল সবুজ (কমান্ড)
+ZSH_HIGHLIGHT_STYLES[builtin]='fg=201,bold'         # নিয়ন গোলাপি (বিল্ট-ইন)
+ZSH_HIGHLIGHT_STYLES[alias]='fg=45,bold'            # সায়ান/হালকা নীল (অ্যালিয়াস)
+ZSH_HIGHLIGHT_STYLES[function]='fg=226,bold'        # সোনালী হলুদ (ফাংশন)
+ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=196,bold'    # ভুল টাইপ করলে উজ্জ্বল লাল
+ZSH_HIGHLIGHT_STYLES[reserved-word]='fg=208,bold'    # কমলা
+ZSH_HIGHLIGHT_STYLES[path]='fg=51,underline'        # আন্ডারলাইন করা সায়ান (পাথ)
 ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=214'
 ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=214'
 ZSH_HIGHLIGHT_STYLES[comment]='fg=244,italic'
 
+# ── Prompt Setup ──────────────────────────
 _TERM_USER=\$(cat "\$HOME/.terminal_username" 2>/dev/null || echo "USER")
 
 autoload -Uz vcs_info
@@ -714,9 +716,11 @@ zstyle ':vcs_info:git:*' formats ' %F{82}⎇ %b%f'
 zstyle ':vcs_info:*' enable git
 setopt PROMPT_SUBST
 
+# ── Selected Prompt Design #$PROMPT_NUM ───
 PROMPT_LINE1_TEMPLATE='${PROMPT_LINE1_FINAL}'
 PROMPT_LINE2_TEMPLATE='${PROMPT_LINE2_FINAL}'
 
+# ── প্রতি এন্টার চাপলে রেইনবো কালার সাইকেল ──
 _RAINBOW_CYCLE=(46 45 201 226 118 82 51 208)
 _RAINBOW_IDX=0
 
@@ -730,11 +734,13 @@ _cycle_prompt_color() {
 
 precmd_functions+=( precmd_vcs_info _cycle_prompt_color )
 
+# ── History ───────────────────────────────
 HISTFILE="\$HOME/.zsh_history"
 HISTSIZE=50000
 SAVEHIST=50000
 setopt HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE SHARE_HISTORY EXTENDED_HISTORY
 
+# ── Keybindings ───────────────────────────
 bindkey '^\[\[A' history-substring-search-up
 bindkey '^\[\[B' history-substring-search-down
 bindkey '^ '   autosuggest-accept
@@ -748,6 +754,7 @@ bindkey '^r'   history-incremental-search-backward
 HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_FOUND='bg=46,fg=0,bold'
 HISTORY_SUBSTRING_SEARCH_HIGHLIGHT_NOT_FOUND='bg=196,fg=255,bold'
 
+# ── Aliases ───────────────────────────────
 alias ls='ls --color=auto'
 alias ll='ls -lah --color=auto'
 alias la='ls -A --color=auto'
@@ -769,11 +776,13 @@ alias gc='git commit -m'
 alias gp='git push'
 alias gl='git log --oneline --graph --color'
 
-alias catc='lolcat'
-alias matrix='cmatrix -C green'
-alias rain='cmatrix -C magenta'
-alias matrix-rainbow='cmatrix -r'
+# রেইনবো কালার টুলস এবং কোড বৃষ্টির অ্যালিয়াস
+alias catc='lolcat' # যেকোনো ফাইল রামধনু রঙে দেখতে: catc filename
+alias matrix='cmatrix -C green' # সবুজ কোড বৃষ্টি
+alias rain='cmatrix -C magenta' # গোলাপি কোড বৃষ্টি
+alias matrix-rainbow='cmatrix -r' # মাল্টিকালার কোড বৃষ্টি
 
+# ── Functions ─────────────────────────────
 setname() {
     echo -n "নতুন নাম লিখুন: "
     read -r NEW_NAME
@@ -791,12 +800,13 @@ prompts() {
 mkcd() { mkdir -p "\$1" && cd "\$1"; }
 backup() { cp "\$1" "\${1}.bak.\$(date +%Y%m%d_%H%M%S)"; }
 
+# ── Startup Banner ────────────────────────
 [ -f "\$HOME/.terminal_banner.sh" ] && bash "\$HOME/.terminal_banner.sh"
 ZEOF
 
-ok ".zshrc written"
+ok ".zshrc written (multicolor prompt-cycle + colorful syntax highlighting)"
 
-# ── [10] Prompt Changer ───────────────────
+# ── [10] Prompt Changer Script ────────────
 section "[10] Prompt Changer"
 
 cat > "$HOME/.select_prompt.sh" << 'CHANGEREOF'
@@ -817,7 +827,7 @@ echo ""
 while IFS='|' read -r num line1 line2; do
     d1=$(echo "$line1" | sed "s/_USER_/$USER_NAME/g" | sed "s/_TIME_/16:01/g")
     d2=$(echo "$line2" | sed "s/_USER_/$USER_NAME/g" | sed "s/_TIME_/16:01/g")
-
+    
     if [ $num -le 9 ]; then
         echo -e "  ${M}${BOLD} 0${num})${NC}  ${W}${d1}${NC}"
         echo -e "       ${W}${d2}${NC}"
@@ -842,11 +852,17 @@ SELECTED=$(grep "^$NUM|" "$HOME/.prompt_designs.txt")
 L1=$(echo "$SELECTED" | cut -d'|' -f2)
 L2=$(echo "$SELECTED" | cut -d'|' -f3)
 
+# Replace placeholders with actual variables
 L1_FINAL=$(echo "$L1" | sed 's/_USER_/${_TERM_USER}/g' | sed 's/_TIME_/%D{%H:%M}/g')
 L2_FINAL=$(echo "$L2" | sed 's/_USER_/${_TERM_USER}/g' | sed 's/_TIME_/%D{%H:%M}/g')
 
-sed -i "s|^PROMPT_LINE1_TEMPLATE=.*|PROMPT_LINE1_TEMPLATE='${L1_FINAL}'|" "$HOME/.zshrc"
-sed -i "s|^PROMPT_LINE2_TEMPLATE=.*|PROMPT_LINE2_TEMPLATE='${L2_FINAL}'|" "$HOME/.zshrc"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s|^PROMPT_LINE1_TEMPLATE=.*|PROMPT_LINE1_TEMPLATE='${L1_FINAL}'|" "$HOME/.zshrc"
+    sed -i '' "s|^PROMPT_LINE2_TEMPLATE=.*|PROMPT_LINE2_TEMPLATE='${L2_FINAL}'|" "$HOME/.zshrc"
+else
+    sed -i "s|^PROMPT_LINE1_TEMPLATE=.*|PROMPT_LINE1_TEMPLATE='${L1_FINAL}'|" "$HOME/.zshrc"
+    sed -i "s|^PROMPT_LINE2_TEMPLATE=.*|PROMPT_LINE2_TEMPLATE='${L2_FINAL}'|" "$HOME/.zshrc"
+fi
 
 echo ""
 echo -e "  ${G}${BOLD}✔ Prompt changed to Design #${NUM}${NC}"
@@ -857,7 +873,7 @@ CHANGEREOF
 chmod +x "$HOME/.select_prompt.sh"
 ok "Prompt changer ready"
 
-# ── [11] Hide welcome ─────────────────────
+# ── [11] Hide Termux welcome ──────────────
 section "[11] Hiding Welcome Message"
 touch "$HOME/.hushlogin"
 ok ".hushlogin created"
@@ -880,10 +896,10 @@ echo -e "  ${Y}  ➤  ${W}cls${Y}       — clear + banner${NC}"
 echo -e "  ${Y}  ➤  ${W}prompts${Y}   — ৪০টি ডিজাইন থেকে আবার সিলেক্ট${NC}"
 echo -e "  ${Y}  ➤  ${W}setname${Y}   — নাম পরিবর্তন করুন${NC}"
 echo -e "  ${Y}  ➤  ${W}matrix${Y}    — কোড বৃষ্টি অন করুন${NC}"
-echo -e "  ${Y}  ➤  ${W}catc <file>${Y} — যেকোনো ফাইল রঙিনভাবে পড়ুন${NC}"
+echo -e "  ${Y}  ➤  ${W}catc <file>${Y} — যেকোনো ফাইল রঙিনভাবে পড়ুন${NC}"
 echo ""
 echo -e "  ${M}${BOLD}  ★ প্রতিটা এন্টারে প্রম্পটের কালার অটো চেঞ্জ হবে!${NC}"
-echo -e "  ${M}${BOLD}  ★ আপনার টাইপ করা প্রতিটি কমান্ড মাল্টিকালার নিয়ন শেডে দেখাবে।${NC}"
+echo -e "  ${M}${BOLD}  ★ আপনার টাইপ করা প্রতিটি কমান্ড মাল্টিকালার নিয়ন শেডে দেখাবে।${NC}"
 echo ""
 echo -en "${S}"
 printf '═%.0s' $(seq 1 $TW)
